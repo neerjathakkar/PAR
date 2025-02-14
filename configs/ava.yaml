@@ -1,0 +1,145 @@
+# @package _global_
+
+defaults:
+    - launcher: default.yaml
+    - trainer: default.yaml
+
+callbacks:
+    model_checkpoint:
+        _target_: PAR.utils.ema_checkpoint.EMACheckpoint    
+        dirpath: ${paths.output_dir}/checkpoints
+        filename: "epoch_{epoch:03d}"
+        monitor: "val/mAP"
+        mode: "max"
+        save_last: True
+        auto_insert_metric_name: False
+        verbose: False # verbosity mode
+        save_top_k: 3 # save k best models (determined by above metric)
+        save_weights_only: False # if True, then only the model’s weights will be saved
+        every_n_train_steps: null # number of training steps between checkpoints
+        train_time_interval: null # checkpoints are monitored at the specified time interval
+        every_n_epochs: 1 # number of epochs between checkpoints
+        save_on_train_epoch_end: True # whether to run checkpointing at the end of the training epoch or the end of validation
+
+    model_summary:
+        _target_: lightning.pytorch.callbacks.RichModelSummary
+        max_depth: 1
+
+    rich_progress_bar:
+        _target_: lightning.pytorch.callbacks.RichProgressBar
+        refresh_rate: 1
+
+    learning_rate_monitor:
+        _target_: lightning.pytorch.callbacks.LearningRateMonitor
+
+    timer:
+        _target_: lightning.pytorch.callbacks.Timer
+    
+    ema:
+      _target_: PAR.utils.ema.EMA
+      decay: 0.9999
+      cpu_offload: False
+      validate_original_weights: False
+      every_n_steps: 1
+
+logger:
+    tensorboard:
+        _target_: lightning.pytorch.loggers.tensorboard.TensorBoardLogger
+        save_dir: "${paths.output_dir}/tensorboard/"
+        version: 0
+    
+    # wandb: 
+    #     _target_: lightning.pytorch.loggers.wandb.WandbLogger
+    #     save_dir: "${paths.output_dir}/tensorboard/"
+    #     version: 0
+    #     project: ""
+    #     entity: ""
+    #     name: ${task_name}
+
+paths: 
+    root_dir: ${oc.env:PROJECT_ROOT}
+    data_dir: ${paths.root_dir}/data/
+    log_dir: ${paths.root_dir}/logs/
+    output_dir: ${hydra:runtime.output_dir}
+    work_dir: ${hydra:runtime.cwd}
+
+extras:
+    print_config: True
+
+hydra:
+    run:
+        dir: ${paths.log_dir}/${task_name}
+    sweep:
+        dir: ${paths.log_dir}/${task_name}
+        subdir: ${hydra.job.num}
+
+hydra_logging: colorlog
+job_logging: colorlog
+
+
+# task name, determines output directory path
+task_name: "1000"
+tags: ["dev"]
+
+# set False to skip model training
+train: True
+
+# evaluate on test set, using best model weights achieved during training
+# lightning chooses best weights based on the metric specified in checkpoint callback
+test: True
+
+# simply provide checkpoint path to resume training
+ckpt_path: null
+
+# seed for random number generators in pytorch, numpy and python.random
+seed: null
+
+
+datamodule:
+    _target_: PAR.datamodules.ava_datamodule.AVADataModule
+    cfg: ${configs}
+    train: ${train}
+
+model:
+    _target_: PAR.models.ava_action_prediction.PAR_LitModule
+    cfg: ${configs}
+
+configs:
+    data_dir: ${paths.data_dir}
+    storage_folder: "${paths.log_dir}/${task_name}/${hydra:sweep.subdir}"
+    train_batch_size: 8
+    train_num_workers: 8
+    test_batch_size: 8
+    test_num_workers: 8
+    pin_memory: True
+    full_seq_render: False
+    num_agents: 2
+    weights_path: null
+    debug: False
+    do_vis: True
+    loss_on_same_agent: False
+    val_stride: 2
+    use_multiagent_pos_emb: False
+    dropout_hidden: 0.0
+    dropout_attn: 0.0
+    
+    log_frequency: 10
+
+    solver:
+        name: "AdamW"
+        lr: 0.0001
+        momentum: 0.9
+        decay_steps: [10,20]
+        decay_gamma: 0.1
+        layer_decay: null
+        ZERO_WD_1D_PARAM: True
+        warmup_epochs: 5
+        weight_decay: 0.05
+        scheduler: "cosine"
+        apply_linear_scaling: True
+    
+    transformer:
+        depth: 8
+        heads: 8
+        hsize: 128
+        isize: 128
