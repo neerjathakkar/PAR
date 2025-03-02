@@ -83,7 +83,7 @@ If you use the PAR codebase in your research, please use the following BibTeX en
 @article{thakkar2025polyautoregressive,
   author    = {Thakkar, Neerja and Sadjadpour, Tara, and Rajasegeran, Jathushan, and Ginosar, Shiry, and Malik, Jitendra},
   title     = {Poly-Autoregressive Prediction for Modeling Interactions},
-  journal   = {arxiv},
+  journal   = {CVPR},
   year      = {2025},
 }
 ```
