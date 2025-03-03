@@ -69,10 +69,12 @@ model:
 
 5. Execute a command as below to run your model
 
+```
 python -m PAR.train -m \
 --config-name XX.yaml \
 task_name=your_task_name \
-trainer=ddp_unused_profiler 
+trainer=ddp_unused_profiler
+```
 
 
 ## Citation
@@ -80,10 +82,10 @@ trainer=ddp_unused_profiler
 If you use the PAR codebase in your research, please use the following BibTeX entry.
 
 ```bibtex
-@article{thakkar2025polyautoregressive,
-  author    = {Thakkar, Neerja and Sadjadpour, Tara, and Rajasegeran, Jathushan, and Ginosar, Shiry, and Malik, Jitendra},
+@inproceedings{thakkar2025polyautoregressive,
+  author    = {Thakkar, Neerja and Sadjadpour, Tara and Rajasegeran, Jathushan and Ginosar, Shiry and Malik, Jitendra},
   title     = {Poly-Autoregressive Prediction for Modeling Interactions},
-  journal   = {CVPR},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
   year      = {2025},
 }
 ```
